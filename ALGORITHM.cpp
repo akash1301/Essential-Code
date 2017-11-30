@@ -640,79 +640,133 @@ int main()
 #include <bits/stdc++.h>
 using namespace std;
 
-vector<int>G[50],G_reverse[50];
-int finishing_time,finish[50],visited[50];
+int n,mapa[mx],vis[mx],scc_num[mx],scc,node,tot;
+vector<int>g[mx],finish,graph_scc[mx],rev_g[mx];
 
-int DFS(int n)
+int dfs1(int u)
 {
-    finishing_time++;
-    int i,j,k;
-    visited[n]=1;
-    for(i=0,j=G[n].size();i<j;i++)
+    vis[u]=1;
+    loop(i,g[u].size())
     {
-        k=G[n][i];
-        if(visited[k]==0)
-            DFS(k);
+        int v=g[u][i];
+        if(!vis[v])
+            dfs1(v);
     }
-    finish[n]=++finishing_time;
-    return 0;
+    finish.pb(u);
 }
 
-int dfs2(int n)
+
+int dfs2(int u)
 {
-    printf(" %d",n);
-    visited[n]=1;
-    int i,j,k;
-    for(i=0,j=G_reverse[n].size();i<j;i++)
+    vis[u]=2;
+    scc_num[u]=scc;
+    loop(i,rev_g[u].size())
     {
-        k=G_reverse[n][i];
-        if(visited[k]==0)
-            dfs2(k);
+        int v=rev_g[u][i];
+        if(vis[v]==1)
+            dfs2(v);
     }
-    return 0;
 }
+
+int dfs3(int u)
+{
+    vis[u]=1;
+    tot++;
+    if(graph_scc[u].size()>1)
+        node=1;
+    loop(i,graph_scc[u].size())
+    {
+        int v=graph_scc[u][i];
+        if(!vis[v])
+            dfs3(v);
+    }
+}
+
+void clr()
+{
+    loop(i,mx)
+    {
+        g[i].clear();
+        rev_g[i].clear();
+        graph_scc[i].clear();
+    }
+    finish.clear();
+    mem(mapa,0);
+    mem(vis,0);
+    mem(scc_num,0);
+}
+
 int main()
 {
-    int i,j,k,m,n,e;
-    printf("Enter no of nodes in the graph:");
-    cin>>n;
-    printf("Enter no of edges in the graph:");
-    cin>>e;
-    while(e--)
+	int t,cas=0;
+	getint(t);
+	while(t--)
     {
-        cin>>i>>j;
-        G[i].push_back(j);
-        G_reverse[j].push_back(i);
-    }
-    memset(visited,0,sizeof visited);
-    finishing_time=0;
-    for(i=1;i<=n;i++)
-    {
-        if(visited[i]==0)
+        clr();
+        getint(n);
+        int cnt=2;
+        mapa[0]=1;
+        loop(i,n)
         {
-            DFS(i);
+            int x;
+            getint(x);
+            loop(j,x)
+            {
+                int a,b;
+                sf("%d %d",&a,&b);
+                if(!mapa[a])
+                    mapa[a]=cnt++;
+                if(!mapa[b])
+                    mapa[b]=cnt++;
+                g[mapa[a]].pb(mapa[b]);
+                rev_g[mapa[b]].pb(mapa[a]);
+            }
         }
-    }
-    vector<pair<int,int> >v;
-    for(i=1;i<=n;i++)
-    {
-        v.push_back(make_pair(finish[i],i));
-    }
-    sort(v.begin(),v.end());
-    reverse(v.begin(),v.end());//sorting in ascending order.
-    int SCC=0;
-    memset(visited,0,sizeof visited);
-    for(i=0;i<n;i++)
-    {
-        m=v[i].second;
-        if(!visited[m])
+
+        for(int i=1;i<cnt;i++)
         {
-            printf("Component of SCC no %d:",++SCC);
-            dfs2(m);
-            printf("\n");
+            if(!vis[i])
+            {
+                dfs1(i);
+            }
         }
+        scc=1;
+        for(int i=finish.size()-1;i>=0;i--)
+        {
+            int u=finish[i];
+            if(vis[u]==1)
+            {
+                dfs2(u);
+                scc++;
+            }
+        }
+
+//        cout<<scc-1<<endl;
+
+        for(int i=1;i<cnt;i++)
+        {
+            loop(j,g[i].size())
+            {
+                int u=g[i][j];
+                if(scc_num[i]!=scc_num[u])
+                    graph_scc[scc_num[i]].pb(scc_num[u]);
+            }
+        }
+
+        mem(vis,0);
+
+        node=0;
+        tot=1;
+        CASE(cas);
+        dfs3(scc_num[1]);
+        //cout<<node<<" "<<tot<<endl;
+        if(!node && tot==scc)
+            pf("YES\n");
+        else
+            pf("NO\n");
     }
-    return 0;
+	return  0;
+
 }
 
 //////////////////////Fast Fibbonacci ////////////////////////////
