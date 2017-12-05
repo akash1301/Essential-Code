@@ -1628,3 +1628,114 @@ int gauss()
       }
       return (ll)r;
 }
+
+
+////////////// DSU on Tree (Sack) ////////////////////////////
+
+// Solution to problem http://codeforces.com/contest/600/problem/E
+
+int n,col[mx],child[mx],ache[mx],cnt[mx],koyta[mx],maxx;
+ll max_sum=0,ans[mx];
+vector<int>g[mx];
+bool big[mx];
+
+int childCount(int u,int par)
+{
+    child[u]=1;
+    loop(i,g[u].size())
+    {
+        int v=g[u][i];
+        if(v==par) continue;
+        child[u]+=childCount(v,u);
+    }
+    return child[u];
+}
+
+
+void add(int u,int par,int val)
+{
+    cnt[col[u]]+=val;
+
+    if(cnt[col[u]]>maxx)
+    {
+        maxx=cnt[col[u]];
+        max_sum=(ll)col[u];
+    }
+    else if(cnt[col[u]]==maxx)
+    {
+        max_sum+=(ll)col[u];
+    }
+
+    loop(i,g[u].size())
+    {
+        int v=g[u][i];
+        if(v!=par && big[v]==0)
+            add(v,u,val);
+    }
+}
+
+
+int dfs(int u,int par,int keep)
+{
+    int mxx=-1,bigchild=-1;
+    loop(i,g[u].size())
+    {
+        int v=g[u][i];
+        if(v!=par && child[v]>mxx)
+        {
+            mxx=child[v];
+            bigchild=v;
+        }
+    }
+    loop(i,g[u].size())
+    {
+        int v=g[u][i];
+        if(v!=par && v!=bigchild)
+            dfs(v,u,0);
+    }
+
+    if(bigchild!=-1)
+    {
+        dfs(bigchild,u,1);
+        big[bigchild]=1;
+    }
+    add(u,par,1);
+    ans[u]=max_sum;
+    if(bigchild!=-1)
+    {
+        big[bigchild]=0;
+    }
+    if(keep==0)
+    {
+        add(u,par,-1);
+        maxx=0;
+        max_sum=0;
+    }
+}
+
+
+
+int main()
+{
+	int t,cas=0;
+	getint(n);
+	for(int i=1;i<=n;i++)
+        getint(col[i]);
+    loop(i,n-1)
+    {
+        int a,b;
+        sf("%d %d",&a,&b);
+        g[a].pb(b);
+        g[b].pb(a);
+    }
+    maxx=0;
+    max_sum=0;
+    childCount(1,0);
+    dfs(1,0,0);
+
+    for(int i=1;i<=n;i++)
+        pf("%lld ",ans[i]);
+
+	return  0;
+
+}
